@@ -15,7 +15,7 @@
         <module>changgou-web</module>
         <module>changgou-eureka</module>
         <module>changgou-common</module>
-        <module>changgou-common-db</module>
+        <module>changgou-common-database</module>
     </modules>
 
     <parent>
@@ -34,8 +34,31 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
+
+        <!--fastjson-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.51</version>
+        </dependency>
+
+        <!--swagger文档-->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.6.1</version>
+        </dependency>
+
+        <!--
+            http://localhost:9011/swagger-ui.html
+        -->
     </dependencies>
 
     <dependencyManagement>
