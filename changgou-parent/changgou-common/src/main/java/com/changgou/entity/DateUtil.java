@@ -7,18 +7,28 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+/***
+ *
+ * @Author:Steven
+ * @Description:itheima
+ *
+ ****/
 public class DateUtil {
+
+    //时间格式
+    public static final String PATTERN_YYYYMMDDHH = "yyyyMMddHH";
+    public static final String PATTERN_YYYY_MM_DDHHMM = "yyyy-MM-dd HH:mm";
 
     /***
      * 从yyyy-MM-dd HH:mm格式转成yyyyMMddHH格式
      * @param dateStr
      * @return
      */
-    public static String formatStr(String dateStr){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    public static String formatStr(String dateStr,String opattern,String npattern){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(opattern);
         try {
             Date date = simpleDateFormat.parse(dateStr);
-            simpleDateFormat = new SimpleDateFormat("yyyyMMddHH");
+            simpleDateFormat = new SimpleDateFormat(npattern);
             return simpleDateFormat.format(date);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -74,17 +84,8 @@ public class DateUtil {
      * @return
      */
     public static List<Date> getDateMenus(){
-      
         //定义一个List<Date>集合，存储所有时间段
-        List<Date> dates = new ArrayList<Date>();
-        
-        //循环12次
-        Date date = toDayStartHour(new Date()); //凌晨
-        for (int i = 0; i <12 ; i++) {
-            //每次递增2小时,将每次递增的时间存入到List<Date>集合中
-            dates.add(addDateHour(date,i*2));
-        }
-
+        List<Date> dates = getDates(12);
         //判断当前时间属于哪个时间范围
         Date now = new Date();
         for (Date cdate : dates) {
@@ -104,32 +105,36 @@ public class DateUtil {
     }
 
     /***
-     * 时间转成yyyyMMddHH
-     * @param date
+     * 指定时间往后N个时间间隔
+     * @param hours
      * @return
      */
-    public static String date2Str(Date date){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHH");
+    public static List<Date> getDates(int hours) {
+        List<Date> dates = new ArrayList<Date>();
+        //循环12次
+        Date date = toDayStartHour(new Date()); //凌晨
+        for (int i = 0; i <hours ; i++) {
+            //每次递增2小时,将每次递增的时间存入到List<Date>集合中
+            dates.add(addDateHour(date,i*2));
+        }
+        return dates;
+    }
+
+    /***
+     * 时间转成yyyyMMddHH
+     * @param date
+     * @param pattern
+     * @return
+     */
+    public static String data2str(Date date, String pattern){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         return simpleDateFormat.format(date);
     }
 
     public static void main(String[] args) {
-
-        //存储数据结果
-        List<Date> dateList = new ArrayList<>();
-
-        //获取到本日的凌晨时间点
-        Date startHour = toDayStartHour(new Date());
-
-        //循环12次
-        for(int i=0;i<12;i++){
-            dateList.add(addDateHour(startHour,i*2));
-        }
-
-        for (Date date : dateList) {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String format = simpleDateFormat.format(date);
-            System.out.println(format);
+        List<Date> dateMenus = getDateMenus();
+        for (Date date : dateMenus) {
+            System.out.println(data2str(date, "HH"));
         }
     }
 }

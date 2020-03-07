@@ -161,12 +161,10 @@ public class IdWorker {
 
 
     public static void main(String[] args) {
-
-        IdWorker idWorker=new IdWorker(0,0);
-
-        for(int i=0;i<10000;i++){
-            long nextId = idWorker.nextId();
-            System.out.println(nextId);
+        //推特  26万个不重复的ID
+        IdWorker idWorker = new IdWorker(0,0);
+        for (int i = 0; i <2600 ; i++) {
+            System.out.println(idWorker.nextId());
         }
     }
 
