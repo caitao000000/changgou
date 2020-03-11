@@ -1,7 +1,12 @@
 package com.changgou.goods.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.changgou.entity.IdWorker;
+import com.changgou.goods.dao.BrandMapper;
+import com.changgou.goods.dao.CategoryMapper;
+import com.changgou.goods.dao.SkuMapper;
 import com.changgou.goods.dao.SpuMapper;
-import com.changgou.goods.pojo.Spu;
+import com.changgou.goods.pojo.*;
 import com.changgou.goods.service.SpuService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -10,7 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /****
  * @Author:sz.itheima
@@ -22,7 +30,128 @@ public class SpuServiceImpl implements SpuService {
 
     @Autowired
     private SpuMapper spuMapper;
+    @Autowired
+    private IdWorker idWorker;
+    @Autowired
+    private CategoryMapper categoryMapper;
+    @Autowired
+    private BrandMapper brandMapper;
+    @Autowired
+    private SkuMapper skuMapper;
 
+    @Override
+    public void putMany(Long[] ids) {
+        // update tb_sku  set  isMarketable =1 where id in(ids) and isdelete = 0  and status = 1
+        Example example = new Example(Spu.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andIn("id", Arrays.asList(ids));
+        criteria.andEqualTo("isDelete","0");
+        criteria.andEqualTo("status","1");
+        Spu spu = new Spu();
+        spu.setIsMarketable("1");
+        spuMapper.updateByExampleSelective(spu,example);
+    }
+
+    public void put(Long spuId) {
+        Spu spu = spuMapper.selectByPrimaryKey(spuId);
+        //检查是否删除的商品
+        if(spu.getIsDelete().equals("1")){
+            throw new RuntimeException("此商品已删除！");
+        }
+        if(!spu.getStatus().equals("1")){
+            throw new RuntimeException("未通过审核的商品不能！");
+        }
+        //上架状态
+        spu.setIsMarketable("1");
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    public void pull(Long spuId) {
+        //查询商品
+        Spu spu = spuMapper.selectByPrimaryKey(spuId);
+        //判断商品是否达到审核条件
+        if(spu.getIsDelete().equalsIgnoreCase("1")){
+            throw new RuntimeException("不能对已删除的商品进行审核");
+        }
+        //修改下架状态
+        spu.setIsMarketable("0");//下架
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    public void audit(Long spuId) {
+        //查询商品
+        Spu spu = spuMapper.selectByPrimaryKey(spuId);
+        //判断商品是否达到审核条件
+        if(spu.getIsDelete().equalsIgnoreCase("1")){
+            throw new RuntimeException("不能对已删除的商品进行审核");
+        }
+        //修改审核
+        spu.setStatus("1");//已审核
+        spu.setIsMarketable("1");//上架
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    public Goods findGoodsById(Long spuId) {
+        //查询Spu
+        Spu spu = spuMapper.selectByPrimaryKey(spuId);
+        //查询List<Sku>  select * from tb_sku  where spu_id =?
+        Sku sku = new Sku();
+        sku.setSpuId(spuId);
+        List<Sku> skuList = skuMapper.select(sku);
+        //封装Goods
+        Goods goods = new Goods();
+        goods.setSpu(spu);
+        goods.setSkuList(skuList);
+        return goods;
+    }
+
+    @Override
+    public void saveGoods(Goods goods) {
+        //spu 一个
+        Spu spu = goods.getSpu();
+        if (spu.getId()==null){
+            //添加
+            spu.setId(idWorker.nextId());
+            spuMapper.insertSelective(spu);
+        }else {
+            //修改
+            //修改spu
+            spuMapper.updateByPrimaryKeySelective(spu);
+            //删除之前的sku
+            Sku sku = new Sku();
+            sku.setSpuId(spu.getId());
+            skuMapper.delete(sku);
+        }
+
+        //sku   集合
+        List<Sku> skuList = goods.getSkuList();
+        //查询三级分类
+        Category category = categoryMapper.selectByPrimaryKey(spu.getCategory3Id());
+        //查询品牌信息
+        Brand brand = brandMapper.selectByPrimaryKey(spu.getBrandId());
+        for (Sku sku : skuList){
+            sku.setId(idWorker.nextId());
+            //获取spec的值 {"电视音响效果":"立体声","电视屏幕尺寸":"20英寸","尺码":"165"}
+            String name = spu.getName();
+            //防止空指针
+            if(StringUtils.isEmpty(sku.getSpec())){
+                sku.setSpec("{}");
+            }
+            Map<String,String> specMap = JSON.parseObject(sku.getSpec(), Map.class);
+            for (Map.Entry<String, String> entry : specMap.entrySet()) {
+                name+= " "+entry.getValue();
+            }
+            sku.setName(name);
+            sku.setCreateTime(new Date());
+            sku.setUpdateTime(new Date());
+            sku.setSpuId(spu.getId());
+            sku.setCategoryId(spu.getCategory3Id());//三级分类id
+            sku.setCategoryName(category.getName());//三级分类名称
+            sku.setBrandName(brand.getName());
+            //将sku保存到数据库
+            skuMapper.insertSelective(sku);
+        }
+    }
 
     /**
      * Spu条件+分页查询

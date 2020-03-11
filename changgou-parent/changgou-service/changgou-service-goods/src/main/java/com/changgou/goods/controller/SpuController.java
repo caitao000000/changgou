@@ -2,6 +2,7 @@ package com.changgou.goods.controller;
 
 import com.changgou.entity.Result;
 import com.changgou.entity.StatusCode;
+import com.changgou.goods.pojo.Goods;
 import com.changgou.goods.pojo.Spu;
 import com.changgou.goods.service.SpuService;
 import com.github.pagehelper.PageInfo;
@@ -22,9 +23,68 @@ import java.util.List;
 @CrossOrigin
 public class SpuController {
 
+
     @Autowired
     private SpuService spuService;
-
+    /**
+     *  批量上架
+     * @param ids
+     * @return
+     */
+    @PutMapping("/put/many")
+    public Result putMany(@RequestBody Long[] ids){
+        spuService.putMany(ids);
+        return new Result(true,StatusCode.OK,"上架商品");
+    }
+    /**
+     * 上架操作
+     * @param spuId
+     * @return
+     */
+    @PutMapping("/put/{id}")
+    public Result put(@PathVariable(value = "id")Long spuId){
+        spuService.put(spuId);
+        return new Result(true,StatusCode.OK,"上架成功");
+    }
+    /**
+     * 下架操作
+     * @param spuId
+     * @return
+     */
+    @PutMapping("/pull/{id}")
+    public Result pull(@PathVariable(value = "id")Long spuId){
+        spuService.pull(spuId);
+        return new Result(true,StatusCode.OK,"下架成功");
+    }
+    /**
+     * 审核操作
+     * @param spuId
+     * @return
+     */
+    @PutMapping("/audit/{id}")
+    public Result audit(@PathVariable(value = "id")Long spuId){
+        spuService.audit(spuId);
+        return new Result(true,StatusCode.OK,"审核成功");
+    }
+    /**
+     *  /***
+     *  * 根据ID查询Goods
+     *  * @param id
+     *  * @return
+     *  */
+    @GetMapping("/goods/{id}")
+    public Result<Goods> findGoodsById(@PathVariable Long id){
+        Goods goods = spuService.findGoodsById(id);
+        return new Result<Goods>(true,StatusCode.OK,"查询商品成功",goods);
+    }
+    /**
+     * 添加商品
+     */
+    @PostMapping("/save")
+    public Result save(@RequestBody Goods goods){
+        spuService.saveGoods(goods);
+        return new Result(true,StatusCode.OK,"保存商品成功");
+    }
     /***
      * Spu分页条件搜索实现
      * @param spu
@@ -98,7 +158,7 @@ public class SpuController {
     @ApiOperation(value = "Spu根据ID修改",notes = "根据ID修改Spu方法详情",tags = {"SpuController"})
     @ApiImplicitParam(paramType = "path", name = "id", value = "主键ID", required = true, dataType = "String")
     @PutMapping(value="/{id}")
-    public Result update(@RequestBody @ApiParam(name = "Spu对象",value = "传入JSON数据",required = false) Spu spu,@PathVariable String id){
+    public Result update(@RequestBody @ApiParam(name = "Spu对象",value = "传入JSON数据",required = false) Spu spu,@PathVariable Long id){
         //设置主键值
         spu.setId(id);
         //调用SpuService实现修改Spu

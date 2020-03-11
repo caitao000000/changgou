@@ -22,9 +22,19 @@ import java.util.List;
 @CrossOrigin
 public class BrandController {
 
+
     @Autowired
     private BrandService brandService;
 
+    /***
+     * 根据分类实现品牌列表查询
+     * /brand/category/{id}  分类ID
+     */
+    @GetMapping(value = "/category/{id}")
+    public Result<List<Brand>> findBrandByCategory(@PathVariable(value = "id")Integer categoryid){
+        List<Brand> brands = brandService.findByCategory(categoryid);
+        return new Result<>(true,StatusCode.OK,"根据分类id查询品牌成功",brands);
+    }
     /***
      * Brand分页条件搜索实现
      * @param brand

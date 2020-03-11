@@ -23,6 +23,14 @@ public class BrandServiceImpl implements BrandService {
     @Autowired
     private BrandMapper brandMapper;
 
+    /**
+     * 根据分类ID查询品牌集合
+     * @param categoryid 分类id
+     */
+    @Override
+    public List<Brand> findByCategory(Integer categoryid) {
+        return brandMapper.findByCategory(categoryid);
+    }
 
     /**
      * Brand条件+分页查询
